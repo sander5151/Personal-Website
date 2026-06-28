@@ -28,8 +28,6 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/sander5151/personal-website:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Deploy to sander-prod via Tailscale
         uses: tailscale/github-action@v2
