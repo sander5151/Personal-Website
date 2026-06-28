@@ -1,4 +1,4 @@
-name: Test
+name: Deploy to Production
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -15,11 +15,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "OWNER=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Login to ghcr.io
         run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build image
-        run: docker build -t ghcr.io/sander5151/personal-website:latest .
+      - name: Build and push Docker image
+        run: |
+          docker build -t ghcr.io/${{ env.OWNER }}/personal-website:latest .
+          docker push ghcr.io/${{ env.OWNER }}/personal-website:latest
 
-      - name: Push image
-        run: docker push ghcr.io/sander5151/personal-website:latest
+      - name: Deploy to sander-prod via Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:github-actions
+
+      - name: SSH and redeploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_SSH_KEY }}
+          script: |
+            cd /srv/sites/personal-website
+            docker compose pull
+            docker compose up -d
