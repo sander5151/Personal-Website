@@ -1,6 +1,16 @@
 import { FadeIn } from "@/components/FadeIn";
 import HeroSection from "@/components/HeroSection";
+import { Metadata } from "next";
 import Image from "next/image";
+
+export const metadata: Metadata = {
+  title: "Sander van der Dussen — Trainee Consultant",
+  description: "Trainee consultant in Techniek & Proces, gevestigd in Groningen.",
+  openGraph: {
+    title: "Sander van der Dussen — Trainee Consultant",
+    description: "Trainee consultant in Techniek & Proces, gevestigd in Groningen.",
+  },
+};
 
 export default function Home() {
   return (
